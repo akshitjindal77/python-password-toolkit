@@ -1,6 +1,7 @@
 import random
 import tkinter as tk
 from tkinter import *
+import os
 
 uppercase = "QWERTYUIOPASDFGHJKLZXCVBNM"
 lowercase = "qwertyuioplkjhgfdsazxcvbnm"
@@ -51,7 +52,11 @@ def generator(length, include_upper, include_lower, include_numbers, exclude_amb
     
     random.shuffle(password)
     final_pass = ''.join(password)
-    with open("demo/passwordgenerator.txt", 'w') as file:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    output_path = os.path.join(BASE_DIR, "demo", "passwordgenerator.txt")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    with open(output_path, 'w') as file:
         file.write(f"Password: {final_pass}")
     return final_pass
 
