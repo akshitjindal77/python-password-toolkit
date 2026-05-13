@@ -58,6 +58,8 @@ Choose attack type (1 for Dictionary, 2 for Brute Force, 3 for Hybrid): 1
 Enter the dictionary file: wordlists/rockyou.txt
 Password found: password
 
+![Password Cracker Screenshot](demo/screenshots/cracker.png)
+
 ---
 
 ### 2. Password Generator (`generator/generator.py`)
@@ -77,6 +79,8 @@ fine-grained control over character composition.
 ```bash
 python generator/generator.py
 ```
+
+![Password Generator Screenshot](demo/screenshots/generator.png)
 
 ---
 
