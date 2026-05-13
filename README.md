@@ -1,6 +1,7 @@
-Here's your README content, ready to copy-paste:
+# Python Password Security Toolkit
 
-markdown# Python Password Security Toolkit
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A collection of educational security tools built in Python that demonstrate 
 real-world password attack techniques, secure password generation, and 
@@ -10,7 +11,19 @@ to explore how passwords are cracked and how to defend against it.
 > **Ethical Use Only.** See [DISCLAIMER.md](DISCLAIMER.md) for full terms.
 > These tools are for educational purposes and authorized testing only.
 
----
+## Table of Contents
+
+- [Tools](#tools)
+  - [1. Password Cracker](#1-password-cracker-crackercrackerpy)
+  - [2. Password Generator](#2-password-generator-generatorgeneratorpy)
+  - [3. Password Manager](#3-password-manager-managermanagerpy)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Wordlist Setup](#wordlist-setup)
+- [Why I Built This](#why-i-built-this)
+- [Security Concepts Covered](#security-concepts-covered)
+- [References](#references)
+- [License](#license)
 
 ## Tools
 
@@ -65,8 +78,6 @@ fine-grained control over character composition.
 python generator/generator.py
 ```
 
-![Password Generator GUI](demo/screenshots/generator.png)
-
 ---
 
 ### 3. Password Manager (`manager/manager.py`)
@@ -95,18 +106,28 @@ AES-encrypted vault using the `cryptography` library.
 python manager/manager.py
 ```
 Welcome to Password Manager
-Set your master password: ••••••••
+Set your master password: •••••••• (first run)
 Master password set.
-Options: add | get | list | delete | quit
 
-add
+Password Manager
+1. Add password
+2. Get password
+3. List sites
+4. Delete password
+5. Quit
+Choose an option: 1
 Site: github.com
 Username: akshitjindal
 Password: ••••••••
-Saved.
+Password added.
 
-
-get
+Password Manager
+1. Add password
+2. Get password
+3. List sites
+4. Delete password
+5. Quit
+Choose an option: 2
 Site: github.com
 Username: akshitjindal
 Password: MySecurePass123!
@@ -115,23 +136,30 @@ Password: MySecurePass123!
 ---
 
 ## Project Structure
+
+```
 python-password-toolkit/
-├── cracker/
-│   ├── init.py
-│   └── cracker.py          # Dictionary, brute force, hybrid attack engine
-├── generator/
-│   ├── init.py
-│   └── generator.py        # Tkinter GUI password generator
-├── manager/
-│   ├── init.py
-│   └── manager.py          # Fernet-encrypted CLI password manager
-├── wordlists/
-│   └── README.md           # Instructions for adding rockyou.txt
-├── demo/
-│   └── screenshots/        # GUI and terminal output screenshots
+├── .gitignore
 ├── DISCLAIMER.md
+├── LICENSE
+├── README.md
 ├── requirements.txt
-└── README.md
+├── rockyou.txt
+├── cracker/
+│   ├── __init__.py
+│   └── cracker.py
+├── demo/
+│   └── screenshots/
+│       └── .gitkeep
+├── generator/
+│   ├── __init__.py
+│   └── generator.py
+├── manager/
+│   ├── __init__.py
+│   └── manager.py
+└── wordlists/
+    └── README.md
+```
 
 ---
 
@@ -199,6 +227,10 @@ real concept from the security world:
 - [Have I Been Pwned: Pwned Passwords](https://haveibeenpwned.com/Passwords)
 
 ---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Tech Stack
 
