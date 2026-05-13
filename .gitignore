@@ -49,6 +49,14 @@ coverage.xml
 *.py.cover
 .hypothesis/
 .pytest_cache/
+
+# Custom additions
+rockyou.txt
+wordlists/*.txt
+vault.json
+__pycache__/
+*.pyc
+.env
 cover/
 
 # Translations
