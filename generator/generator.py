@@ -1,110 +1,267 @@
-import random
-import tkinter as tk
-from tkinter import *
-import os
+"""Secure password generator using cryptographic randomness."""
 
-uppercase = "QWERTYUIOPASDFGHJKLZXCVBNM"
-lowercase = "qwertyuioplkjhgfdsazxcvbnm"
-numbers = "1234567890"
-symbols = "`;/.,<>?:][}{|!@#$%^&+-"
-ambiguous = "O0Il1|"
+from __future__ import annotations
 
-all = uppercase + lowercase + numbers + symbols
+import secrets
+import string
 
-def creating_pool(include_upper, include_lower, include_numbers, exclude_ambi, include_sym):
-    pool = ""
+
+AMBIGUOUS = set("O0Il1|")
+SYS_RANDOM = secrets.SystemRandom()
+
+
+def generate_password(
+    length: int = 20,
+    include_upper: bool = True,
+    include_lower: bool = True,
+    include_numbers: bool = True,
+    exclude_ambi: bool = False,
+    include_sym: bool = True,
+) -> str:
+    """Generate a password using selected character categories."""
+
+    groups = []
+
     if include_upper:
-        pool += uppercase
+        groups.append(string.ascii_uppercase)
+
     if include_lower:
-        pool += lowercase
+        groups.append(string.ascii_lowercase)
+
     if include_numbers:
-        pool += numbers
+        groups.append(string.digits)
+
     if include_sym:
-        pool += symbols
+        groups.append("!@#$%^&*()-_=+[]{}?")
+
     if exclude_ambi:
-        pool = ''.join(filter(lambda ch: ch not in ambiguous, pool))
-    return pool
+        groups = [
+            "".join(
+                character
+                for character in group
+                if character not in AMBIGUOUS
+            )
+            for group in groups
+        ]
 
-def generator(length, include_upper, include_lower, include_numbers, exclude_ambi, include_sym):
-    if length < 4:
-        return "Not possible"
-        
-    
-    pool = creating_pool(include_upper, include_lower, include_numbers, exclude_ambi, include_sym)
+    groups = [
+        group
+        for group in groups
+        if group
+    ]
 
-    if not pool:
-        return "Choose at least one character type"
-    
-    password = []
-    if include_upper:
-        password.append(random.choice(uppercase))
-    if include_lower:
-        password.append(random.choice(lowercase))
-    if include_numbers:
-        password.append(random.choice(numbers))
-    if include_sym:
-        password.append(random.choice(symbols))
-    
-    newlength = length - len(password)
-    for _ in range(newlength):
-        randomChar = random.choice(pool)
-        password.append(randomChar)
-    
-    random.shuffle(password)
-    final_pass = ''.join(password)
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    output_path = os.path.join(BASE_DIR, "demo", "passwordgenerator.txt")
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if not groups:
+        raise ValueError(
+            "Select at least one character category."
+        )
 
-    with open(output_path, 'w') as file:
-        file.write(f"Password: {final_pass}")
-    return final_pass
+    if length < len(groups):
+        raise ValueError(
+            "Length must be at least the number "
+            "of selected categories."
+        )
 
+    if not 4 <= length <= 200:
+        raise ValueError(
+            "Choose a length between 4 and 200 characters."
+        )
 
-def update_pass():
-    length = length_var.get()
-    include_upper = upper.get()
-    include_lower = lower.get()
-    include_numbers = num.get()
-    include_sym = sym.get()
-    exclude_ambi = ambi.get()
-    new_password = generator(length, include_upper, include_lower, include_numbers, exclude_ambi, include_sym)
-    pass_var.set(new_password)
+    # Ensure at least one character from each selected category.
+    result = [
+        secrets.choice(group)
+        for group in groups
+    ]
 
+    pool = "".join(groups)
 
-root = tk.Tk()
-root.title('Password Generator')
+    # Fill the remaining length.
+    result.extend(
+        secrets.choice(pool)
+        for _ in range(length - len(result))
+    )
 
-length_var = IntVar(value=8)
-upper = IntVar(value=1)
-lower = IntVar(value=1)
-num = IntVar(value=1)
-sym = IntVar(value=1)
-ambi = IntVar(value=0)
-pass_var = StringVar()
+    # Securely shuffle the resulting characters.
+    SYS_RANDOM.shuffle(result)
 
-update_pass()
-
-frame = tk.Frame(root)
-frame.pack()
-
-tk.Label(frame, text="Length of the password: ").grid(row=0, column= 0, sticky = 'w')
-len_slider = tk.Scale(frame, from_= 4, to = 200, orient="horizontal", variable = length_var, command=lambda x: update_pass())
-len_slider.grid(row=0, column=1)
-
-tk.Checkbutton(frame, text="Include Uppercase", variable=upper, command=update_pass).grid(row=2, column=0, columnspan=2, sticky="w")
-tk.Checkbutton(frame, text="Include Lowercase", variable=lower, command=update_pass).grid(row=3, column=0, columnspan=2, sticky="w")
-tk.Checkbutton(frame, text="Include Numbers", variable=num, command=update_pass).grid(row=4, column=0, columnspan=2, sticky="w")
-tk.Checkbutton(frame, text="Include Symbols", variable=sym, command=update_pass).grid(row=5, column=0, columnspan=2, sticky="w")
-tk.Checkbutton(frame, text="Exclude Ambiguous Characters", variable=ambi, command=update_pass).grid(row=6, column=0, columnspan=2, sticky="w")
+    return "".join(result)
 
 
-tk.Label(frame, text="Generated Password:").grid(row=7, column=0, sticky="w", pady=10)
-tk.Entry(frame, textvariable=pass_var, width=30, state="readonly").grid(row=7, column=1, pady=10)
+def main() -> None:
+    """Launch the graphical password-generator window."""
+
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+
+        root = tk.Tk()
+
+    except Exception as exc:
+        print(f"Cannot open GUI: {exc}")
+        return
+
+    root.title("Secure Password Generator")
+    root.geometry("530x340")
+    root.resizable(False, False)
+
+    frame = tk.Frame(
+        root,
+        padx=18,
+        pady=18,
+    )
+
+    frame.pack(
+        fill="both",
+        expand=True,
+    )
+
+    length = tk.IntVar(value=20)
+
+    upper = tk.BooleanVar(value=True)
+    lower = tk.BooleanVar(value=True)
+    digits = tk.BooleanVar(value=True)
+    symbols = tk.BooleanVar(value=True)
+    no_ambiguous = tk.BooleanVar(value=False)
+
+    password_var = tk.StringVar(value="")
+
+    tk.Label(
+        frame,
+        text="Password length",
+    ).grid(
+        row=0,
+        column=0,
+        sticky="w",
+    )
+
+    tk.Scale(
+        frame,
+        from_=4,
+        to=64,
+        orient="horizontal",
+        variable=length,
+        length=290,
+    ).grid(
+        row=0,
+        column=1,
+        sticky="we",
+    )
+
+    options = [
+        ("Include uppercase", upper),
+        ("Include lowercase", lower),
+        ("Include numbers", digits),
+        ("Include symbols", symbols),
+        ("Exclude ambiguous characters", no_ambiguous),
+    ]
+
+    for index, (name, variable) in enumerate(
+        options,
+        start=1,
+    ):
+        tk.Checkbutton(
+            frame,
+            text=name,
+            variable=variable,
+        ).grid(
+            row=index,
+            column=0,
+            columnspan=2,
+            sticky="w",
+        )
+
+    tk.Label(
+        frame,
+        text="Generated password",
+    ).grid(
+        row=6,
+        column=0,
+        sticky="w",
+        pady=(10, 0),
+    )
+
+    tk.Entry(
+        frame,
+        textvariable=password_var,
+        state="readonly",
+        width=43,
+    ).grid(
+        row=7,
+        column=0,
+        columnspan=2,
+        sticky="we",
+    )
+
+    def regenerate():
+        try:
+            password = generate_password(
+                length=length.get(),
+                include_upper=upper.get(),
+                include_lower=lower.get(),
+                include_numbers=digits.get(),
+                exclude_ambi=no_ambiguous.get(),
+                include_sym=symbols.get(),
+            )
+
+            password_var.set(password)
+
+        except ValueError as exc:
+            messagebox.showerror(
+                "Password generator",
+                str(exc),
+            )
+
+    def copy():
+        if password_var.get():
+            root.clipboard_clear()
+            root.clipboard_append(
+                password_var.get()
+            )
+
+            root.update()
+
+            messagebox.showinfo(
+                "Copied",
+                "Copied to clipboard. "
+                "Clear the clipboard after use.",
+            )
+
+    tk.Button(
+        frame,
+        text="Generate password",
+        command=regenerate,
+    ).grid(
+        row=8,
+        column=0,
+        pady=14,
+    )
+
+    tk.Button(
+        frame,
+        text="Copy",
+        command=copy,
+    ).grid(
+        row=8,
+        column=1,
+        pady=14,
+    )
+
+    tk.Label(
+        frame,
+        text=(
+            "Generated passwords are not "
+            "written to plaintext files."
+        ),
+    ).grid(
+        row=9,
+        column=0,
+        columnspan=2,
+        sticky="w",
+    )
+
+    regenerate()
+
+    root.mainloop()
 
 
-tk.Button(frame, text="Generate Password", command=update_pass).grid(row=8, column=0, columnspan=2, pady=10)
-root.mainloop()
-
-
-
+if __name__ == "__main__":
+    main()

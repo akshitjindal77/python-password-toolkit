@@ -1,80 +1,230 @@
+"""Offline password-hash auditing demonstrations.
+
+This module demonstrates weaknesses of fast, unsalted
+password hashes using synthetic test credentials only.
+"""
+
 import hashlib
 import itertools
+import time
 
-def hash_func(password, algorithm):
-    h_pass = getattr(hashlib, algorithm, None)
-    if not h_pass:
-        raise ValueError(f"Unsupported hash algorithm {algorithm}")
-    return h_pass(password.encode()).hexdigest()
 
-def brute_force(target, charset, length, algorithm="sha256"):
-    for curr_len in range(1, length+1):
-        for combo in itertools.product(charset, repeat=curr_len):
-            password = ''.join(combo)
-            if hash_func(password, algorithm) == target:
-                return password
-    return None
+def hash_func(
+    password: str,
+    algorithm: str = "sha256",
+) -> str:
+    """Calculate a hash for a synthetic test password."""
 
-def dictionary_attack(target, dictionary, algorithm="sha256"):
-    try:
-        with open(dictionary, 'r', encoding='utf-8', errors='ignore') as file:
-            for line in file:
-                password = line.strip()
-                if hash_func(password, algorithm) == target:
-                    return password
-    except FileNotFoundError:
-        print(f"Error: File {dictionary} not found")
-    return None
+    if algorithm not in (
+        "sha256",
+        "sha1",
+        "md5",
+    ):
+        raise ValueError(
+            "This training demo supports SHA-256, "
+            "SHA-1, and MD5."
+        )
 
-def hybrid_attack(target, dictionary, charset, length, algorithm):
-    try:
-        with open(dictionary, 'r', encoding='utf-8', errors='ignore') as file:
-            for line in file:
-                base_pass = line.strip()
-                for curr_length in range(1,length+1):
-                    for combo in itertools.product(charset, repeat=curr_length):
-                        suffix = ''.join(combo)
-                        password = base_pass + suffix
-                        if hash_func(password, algorithm) == target:
-                            return password
-    except FileNotFoundError:
-        print(f"File {dictionary} not found")
-    return None
-                        
+    return getattr(
+        hashlib,
+        algorithm,
+    )(
+        password.encode("utf-8")
+    ).hexdigest()
+
+
+def dictionary_attack(
+    target: str,
+    candidates,
+    algorithm="sha256",
+):
+    """Compare a test hash against a predefined word list."""
+
+    attempts = 0
+
+    for password in candidates:
+        attempts += 1
+
+        if hash_func(
+            password,
+            algorithm,
+        ) == target:
+            return password, attempts
+
+    return None, attempts
+
+
+def brute_force(
+    target: str,
+    charset: str,
+    max_length: int,
+    algorithm="sha256",
+    max_attempts=200_000,
+):
+    """Try combinations from a small test character set."""
+
+    attempts = 0
+
+    for length in range(
+        1,
+        max_length + 1,
+    ):
+        for chars in itertools.product(
+            charset,
+            repeat=length,
+        ):
+            if attempts >= max_attempts:
+                return None, attempts
+
+            attempts += 1
+
+            password = "".join(chars)
+
+            if hash_func(
+                password,
+                algorithm,
+            ) == target:
+                return password, attempts
+
+    return None, attempts
+
+
+def hybrid_attack(
+    target: str,
+    candidates,
+    charset: str,
+    max_length: int,
+    algorithm="sha256",
+    max_attempts=200_000,
+):
+    """Append small variations to test dictionary words."""
+
+    attempts = 0
+
+    for base in candidates:
+        for length in range(
+            1,
+            max_length + 1,
+        ):
+            for chars in itertools.product(
+                charset,
+                repeat=length,
+            ):
+                if attempts >= max_attempts:
+                    return None, attempts
+
+                attempts += 1
+
+                suffix = "".join(chars)
+                password = base + suffix
+
+                if hash_func(
+                    password,
+                    algorithm,
+                ) == target:
+                    return password, attempts
+
+    return None, attempts
+
 
 def main():
-    target = input("Enter the target hash: ").strip()
-    algorithm = input("Enter the algorithm: ") 
-    attack_type = int(input("Choose attack type (1 for 'dictionary' , 2 for 'brute_force' or 3 for 'Hybrid): "))
-    
+    """Run the interactive offline hash-auditing demos."""
 
-    if attack_type == 1:
-        dictionary = input("Enter the dictionary file: ")
-        result = dictionary_attack(target, dictionary, algorithm)
-        if result:
-            print(f"Password found: {result}")
-        else:
-            print("Password not found")
-    elif attack_type == 2:
-        charset = input("Enter the character set: ")
-        length = int(input("Enter the maximum length: "))
-        result = brute_force(target, charset, length, algorithm)
-        if result:
-            print(f"Password found: {result}")
-        else:
-            print("Password not found")
-    elif attack_type == 3:
-        dictionary = input("Enter the dictionary file: ")
-        charset = input("Enter the character set: ")
-        length = int(input("Enter the maximum length: "))
-        result = hybrid_attack(target, dictionary, charset, length, algorithm)
-        if result:
-            print(f"Password found: {result}")
-        else:
-            print("Password not found")
+    print("\n=== OFFLINE PASSWORD HASH AUDIT DEMO ===")
 
-    else:
-        print("The attack type you entered is invalid. Please choose 1, 2, or 3.")
+    print(
+        "This feature uses ONLY synthetic test "
+        "credentials, never real accounts."
+    )
+
+    while True:
+        print(
+            "\n1. Dictionary demo "
+            "(test password: welcome)"
+        )
+        print(
+            "2. Brute-force demo "
+            "(test password: cab)"
+        )
+        print(
+            "3. Hybrid demo "
+            "(test password: sun7)"
+        )
+        print(
+            "4. Return to toolkit menu"
+        )
+
+        choice = input(
+            "Choose 1-4: "
+        ).strip()
+
+        if choice == "4":
+            return
+
+        started = time.perf_counter()
+
+        if choice == "1":
+            target = hash_func("welcome")
+
+            found, attempts = dictionary_attack(
+                target,
+                [
+                    "admin",
+                    "123456",
+                    "letmein",
+                    "welcome",
+                ],
+            )
+
+        elif choice == "2":
+            target = hash_func("cab")
+
+            found, attempts = brute_force(
+                target,
+                "abc",
+                3,
+            )
+
+        elif choice == "3":
+            target = hash_func("sun7")
+
+            found, attempts = hybrid_attack(
+                target,
+                [
+                    "sea",
+                    "sun",
+                    "star",
+                ],
+                "0123456789",
+                1,
+            )
+
+        else:
+            print("Choose 1-4.")
+            continue
+
+        seconds = (
+            time.perf_counter() - started
+        )
+
+        print(
+            f"Algorithm: SHA-256; "
+            f"test hash: {target}"
+        )
+
+        print(
+            f"Recovered TEST password: {found!r}; "
+            f"attempts: {attempts}; "
+            f"time: {seconds:.5f}s"
+        )
+
+        print(
+            "Lesson: fast unsalted hashes make "
+            "offline guessing cheap. "
+            "Use salted scrypt, Argon2id, or bcrypt "
+            "for password protection."
+        )
+
 
 if __name__ == "__main__":
     main()

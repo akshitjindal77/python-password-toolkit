@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "kdf": "scrypt",
+  "salt": "z617P9EI9VmefwgNXMkRqA==",
+  "n": 16384,
+  "r": 8,
+  "p": 1
+}
